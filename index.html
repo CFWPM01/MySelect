@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MySelect — Back Office Prototype</title>
+<style>
+  :root{
+    --navy:#111a2e;
+    --muted:#9aa5ba;
+    --gold:#c8891f;
+    --gold-dark:#a86f16;
+    --bg:#f3f4f6;
+    --card:#ffffff;
+    --border:#e5e7eb;
+    --text:#111827;
+    --text-soft:#6b7280;
+    --green:#059669;
+    --green-bg:#ecfdf5;
+    --red:#dc2626;
+    --red-bg:#fef2f2;
+    --amber:#b45309;
+    --amber-bg:#fffbeb;
+    --blue:#1d4ed8;
+    --blue-bg:#eff6ff;
+    --slate:#6b7280;
+    --slate-bg:#f3f4f6;
+    --radius:12px;
+    --shadow:0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.04);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;}
+
+  /* ---------- Top nav ---------- */
+  .topnav{background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:60px;position:relative;z-index:20;}
+  .topnav-left{display:flex;align-items:center;gap:28px;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;}
+  .brand-icon{width:28px;height:28px;background:#1c2740;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+  .nav-links{display:flex;align-items:center;gap:22px;font-size:14px;color:var(--muted);}
+  .nav-links .active{color:#fff;font-weight:600;position:relative;}
+  .nav-links .active::after{content:"";position:absolute;left:0;right:0;bottom:-20px;height:2px;background:var(--gold);}
+  .nav-links a:hover{color:#fff;}
+  .topnav-right{display:flex;align-items:center;gap:14px;font-size:14px;color:#e5e7eb;}
+  .proto-tag{background:#3a2c0f;color:#f2c675;font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:6px;}
+
+  /* ---------- Sub nav ---------- */
+  .subnav{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;gap:4px;position:sticky;top:0;z-index:15;}
+  .subnav button{background:none;border:none;padding:14px 16px;font-size:14px;color:var(--text-soft);font-weight:500;border-bottom:2px solid transparent;}
+  .subnav button.active{color:var(--text);font-weight:600;border-bottom-color:var(--gold);}
+  .subnav button:hover{color:var(--text);}
+  .subnav .count-pill{background:#f3f4f6;color:var(--text-soft);font-size:11px;padding:1px 7px;border-radius:10px;margin-left:6px;}
+  .subnav button.active .count-pill{background:#fdf1de;color:var(--gold-dark);}
+
+  .page{max-width:1500px;margin:0 auto;padding:28px 32px 80px;}
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;gap:16px;flex-wrap:wrap;}
+  .page-head h1{font-size:26px;margin:0 0 4px;}
+  .page-head p{margin:0;color:var(--text-soft);font-size:14px;}
+
+  /* ---------- Filter bar ---------- */
+  .filterbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px;}
+  .filterbar input[type=text]{flex:1;min-width:220px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff;}
+  .filterbar select{padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff;color:var(--text);}
+  .btn-gold{background:var(--gold);color:#fff;border:none;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;}
+  .btn-gold:hover{background:var(--gold-dark);}
+  .btn-gold:disabled{background:#e5c68a;cursor:not-allowed;}
+  .btn-outline{background:#fff;border:1px solid var(--border);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:500;color:var(--text);}
+  .btn-outline:hover{background:#f9fafb;}
+  .btn-sm{padding:7px 12px;font-size:13px;border-radius:8px;}
+
+  /* ---------- Table ---------- */
+  table{width:100%;border-collapse:collapse;}
+  th{text-align:left;font-size:12px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:.03em;padding:10px 20px;border-bottom:1px solid var(--border);background:#fafbfc;white-space:nowrap;}
+  th.sortable{cursor:pointer;user-select:none;}
+  th.sortable:hover{color:var(--text);}
+  td{padding:14px 20px;font-size:13.5px;border-bottom:1px solid #f1f2f4;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .flat-table{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .user-row{cursor:pointer;}
+  .user-row:hover td{background:#fafafa;}
+  .user-cell{display:flex;align-items:center;gap:12px;}
+  .avatar{width:38px;height:38px;border-radius:50%;background:#e8edf7;color:#33456b;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+  .avatar.lg{width:56px;height:56px;font-size:19px;}
+  .user-name{font-weight:600;font-size:14.5px;}
+  .user-sub{color:var(--text-soft);font-size:12.5px;margin-top:1px;}
+  .num-pill{display:inline-block;min-width:34px;text-align:center;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:20px;}
+  .num-pill.ok{background:var(--green-bg);color:var(--green);}
+  .num-pill.fail{background:var(--red-bg);color:var(--red);}
+  .num-pill.zero{background:var(--slate-bg);color:var(--slate);}
+  .link-btn{color:var(--gold-dark);font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:2px;cursor:pointer;}
+  .link-btn:hover{text-decoration:underline;}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--text-soft);}
+  .empty-state h3{color:var(--text);margin-bottom:6px;}
+
+  /* ---------- Panels / stat cards ---------- */
+  .stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px;}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);}
+  .stat-card .label{font-size:12.5px;color:var(--text-soft);font-weight:600;margin-bottom:8px;}
+  .stat-card .value{font-size:26px;font-weight:700;}
+  .stat-card .sub{font-size:12px;color:var(--text-soft);margin-top:4px;}
+  .stat-card.accent-green .value{color:var(--green);}
+  .stat-card.accent-red .value{color:var(--red);}
+  .stat-card.accent-blue .value{color:var(--blue);}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;}
+  .panel h3{margin:0 0 16px;font-size:15px;display:flex;align-items:center;gap:8px;}
+  .icon-badge{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;}
+
+  /* ---------- Customer screen ---------- */
+  .breadcrumb{font-size:13px;color:var(--gold-dark);font-weight:600;margin-bottom:14px;}
+  .breadcrumb span{color:var(--text-soft);font-weight:400;margin:0 6px;}
+  .cust-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;}
+  .cust-header-left{display:flex;align-items:center;gap:16px;}
+  .cust-header h1{font-size:24px;margin:0 0 2px;}
+  .cust-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+  .kv{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;padding:9px 0;gap:12px;border-bottom:1px solid #f4f5f7;}
+  .kv:last-child{border-bottom:none;}
+  .kv .k{color:var(--text-soft);flex-shrink:0;}
+  .kv .v{font-weight:600;text-align:right;display:flex;align-items:center;gap:8px;justify-content:flex-end;min-width:0;word-break:break-all;}
+  .pencil{background:none;border:1px solid var(--border);border-radius:7px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-soft);flex-shrink:0;}
+  .pencil:hover{border-color:var(--gold);color:var(--gold-dark);background:#fffaf1;}
+  .email-edit{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;width:100%;}
+  .email-edit input{flex:1;min-width:200px;padding:8px 10px;border:1px solid var(--gold);border-radius:8px;font-size:13.5px;outline:none;box-shadow:0 0 0 3px rgba(200,137,31,.15);}
+  .field-error{color:var(--red);font-size:12px;font-weight:600;text-align:right;margin-top:4px;}
+  .big-figure{font-size:22px;font-weight:700;margin-bottom:2px;}
+  .big-sub{font-size:12.5px;color:var(--text-soft);}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .split-box{border-radius:10px;padding:16px;}
+  .split-box.ok{background:var(--green-bg);}
+  .split-box.fail{background:var(--red-bg);}
+  .split-box .lbl{font-size:12.5px;font-weight:600;margin-bottom:6px;}
+  .split-box.ok .lbl,.split-box.ok .num{color:var(--green);}
+  .split-box.fail .lbl,.split-box.fail .num{color:var(--red);}
+  .split-box .num{font-size:30px;font-weight:700;}
+  .result-tag{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;}
+  .result-tag.ok{background:var(--green-bg);color:var(--green);}
+  .result-tag.fail{background:var(--red-bg);color:var(--red);}
+  .sent-note{font-size:12.5px;color:var(--text-soft);margin-top:8px;text-align:right;}
+
+  /* ---------- Analytics ---------- */
+  .metric-toggle{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;}
+  .metric-toggle button{padding:9px 14px;border:none;background:#fff;font-size:13px;color:var(--text-soft);font-weight:600;border-right:1px solid var(--border);}
+  .metric-toggle button:last-child{border-right:none;}
+  .metric-toggle button.active{background:var(--navy);color:#fff;}
+  .chart-controls{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .chart-controls select{padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:13.5px;background:#fff;}
+  .chart-wrap{position:relative;}
+  .chart{display:flex;align-items:flex-end;gap:4px;height:260px;padding:0 4px;border-bottom:1px solid var(--border);position:relative;}
+  .gridline{position:absolute;left:0;right:0;border-top:1px dashed #eceef1;pointer-events:none;}
+  .gridline span{position:absolute;left:-2px;top:-9px;transform:translateX(-100%);font-size:11px;color:var(--text-soft);padding-right:6px;}
+  .chart-area{margin-left:34px;}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative;z-index:1;}
+  .bar{width:100%;max-width:28px;border-radius:5px 5px 0 0;transition:height .25s;min-height:2px;}
+  .bar-col:hover .bar{filter:brightness(.88);}
+  .x-labels{display:flex;gap:4px;padding:6px 4px 0;}
+  .x-labels div{flex:1;text-align:center;font-size:11px;color:var(--text-soft);white-space:nowrap;}
+  .tooltip{position:absolute;background:var(--navy);color:#fff;font-size:12px;padding:7px 10px;border-radius:8px;pointer-events:none;white-space:nowrap;transform:translate(-50%,-110%);display:none;z-index:5;}
+  .tooltip b{color:#f2c675;}
+  .daily-table-wrap{max-height:340px;overflow:auto;}
+
+  /* ---------- Toast ---------- */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:13.5px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;transition:all .2s;z-index:60;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------- Dev notes ---------- */
+  .devnotes-fab{position:fixed;bottom:22px;right:22px;background:var(--navy);color:#fff;border:none;border-radius:24px;padding:12px 18px;font-size:13.5px;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;z-index:40;}
+  .devnotes-fab:hover{background:#1c2740;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(15,20,32,.5);display:none;align-items:center;justify-content:center;z-index:50;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:#fff;border-radius:14px;max-width:580px;width:92%;max-height:80vh;overflow-y:auto;padding:24px 26px;box-shadow:0 20px 50px rgba(0,0,0,.25);}
+  .modal h2{margin:0 0 14px;font-size:18px;display:flex;align-items:center;justify-content:space-between;}
+  .modal-close{background:none;border:none;font-size:20px;color:var(--text-soft);line-height:1;}
+  .modal ul{padding-left:18px;margin:0 0 16px;font-size:13.5px;line-height:1.6;color:#374151;}
+  .modal h4{font-size:13px;margin:16px 0 6px;color:var(--gold-dark);text-transform:uppercase;letter-spacing:.03em;}
+
+  .hidden{display:none !important;}
+  .muted{color:var(--text-soft);}
+
+  @media (max-width:1100px){
+    .cust-grid{grid-template-columns:1fr;}
+    .stat-grid{grid-template-columns:repeat(2,1fr);}
+    .nav-links{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ TOP NAV ============ -->
+<div class="topnav">
+  <div class="topnav-left">
+    <div class="brand"><div class="brand-icon">🚗</div>Dashboard <span style="background:#e0463f;font-size:11px;padding:1px 7px;border-radius:8px;margin-left:2px;">661</span></div>
+    <div class="nav-links">
+      <a href="#">Deals</a><a href="#">Vehicles</a><a href="#">Content</a><a href="#">Users</a>
+      <a href="#">Redirects</a><a href="#">OTR Calculator</a><a href="#">Discounts</a><a href="#">Wiki</a>
+      <a href="#">Tax</a><a href="#">Feeds</a><a href="#">Settings</a>
+      <a href="#" class="active">MySelect</a>
+    </div>
+  </div>
+  <div class="topnav-right">
+    Louis Bacon ▾ <span class="proto-tag">PROTOTYPE</span>
+  </div>
+</div>
+
+<!-- ============ SUB NAV ============ -->
+<div class="subnav" id="subnav">
+  <button data-subnav="users" class="active">MySelect Users <span class="count-pill" id="count-users">0</span></button>
+  <button data-subnav="analytics">Login Analytics</button>
+</div>
+
+<!-- ============ SCREEN: USER LIST ============ -->
+<div class="page" id="screen-list">
+  <div class="page-head">
+    <div>
+      <h1>MySelect Users</h1>
+      <p>Customers who have logged into MySelect. Click a customer to open their customer screen.</p>
+    </div>
+  </div>
+
+  <div class="filterbar">
+    <input type="text" id="f-search" placeholder="Search by customer name or email…">
+    <select id="f-date">
+      <option value="all">Last login: Any time</option>
+      <option value="1">Last 24 hours</option>
+      <option value="7">Last 7 days</option>
+      <option value="30">Last 30 days</option>
+    </select>
+    <select id="f-sort">
+      <option value="last">Sort: Most recent login</option>
+      <option value="name">Sort: Name (A–Z)</option>
+      <option value="ok">Sort: Most successful logins</option>
+      <option value="fail">Sort: Most unsuccessful logins</option>
+    </select>
+    <button class="btn-outline">⭳ Export</button>
+  </div>
+
+  <div id="results-meta" class="muted" style="font-size:13px;margin-bottom:10px;"></div>
+  <div id="list-container"></div>
+</div>
+
+<!-- ============ SCREEN: CUSTOMER ============ -->
+<div class="page hidden" id="screen-customer">
+  <div class="breadcrumb"><a href="#" id="back-to-list">MySelect Users</a><span>›</span><span id="bc-name"></span></div>
+
+  <div class="cust-header">
+    <div class="cust-header-left">
+      <div class="avatar lg" id="c-avatar"></div>
+      <div>
+        <h1 id="c-title"></h1>
+        <div class="muted" style="font-size:13.5px;">MySelect customer</div>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <button class="btn-gold" id="resend-btn">✉️ Resend login email</button>
+      <div class="sent-note" id="c-sent-note"></div>
+    </div>
+  </div>
+
+  <div class="cust-grid">
+    <div class="panel">
+      <h3><span class="icon-badge" style="background:#eef2ff;color:#3730a3;">👤</span>Customer details</h3>
+      <div class="kv"><span class="k">Name</span><span class="v" id="c-name"></span></div>
+      <div class="kv" id="email-row"></div>
+      <div id="email-error" class="field-error hidden"></div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="icon-badge" style="background:#eff6ff;color:#1d4ed8;">🕒</span>Last login</h3>
+      <div class="big-figure" id="c-last-login"></div>
+      <div class="big-sub" id="c-last-login-ago"></div>
+      <div style="margin-top:14px;" class="kv"><span class="k">Last attempt</span><span class="v" id="c-last-attempt"></span></div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="icon-badge" style="background:#fdf1de;color:#a86f16;">🔐</span>Login attempts</h3>
+      <div class="split">
+        <div class="split-box ok"><div class="lbl">Successful</div><div class="num" id="c-ok"></div></div>
+        <div class="split-box fail"><div class="lbl">Unsuccessful</div><div class="num" id="c-fail"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="padding:0;overflow:hidden;">
+    <div style="padding:18px 20px 0;"><h3><span class="icon-badge" style="background:#f3f4f6;">📜</span>Recent login activity</h3></div>
+    <table>
+      <thead><tr><th>Date &amp; time</th><th>Result</th></tr></thead>
+      <tbody id="c-history"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============ SCREEN: ANALYTICS ============ -->
+<div class="page hidden" id="screen-analytics">
+  <div class="page-head">
+    <div>
+      <h1>Login Analytics</h1>
+      <p>How many times people have logged into MySelect overall.</p>
+    </div>
+  </div>
+
+  <div class="stat-grid" id="stat-grid"></div>
+
+  <div class="panel" style="margin-bottom:16px;">
+    <div class="chart-controls">
+      <div class="metric-toggle" id="metric-toggle">
+        <button data-metric="all" class="active">Daily MySelect account logins</button>
+        <button data-metric="ok">Successful logins</button>
+        <button data-metric="fail">Unsuccessful logins</button>
+      </div>
+      <select id="range-select">
+        <option value="7">Last 7 days</option>
+        <option value="14">Last 14 days</option>
+        <option value="30" selected>Last 30 days</option>
+      </select>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-area">
+        <div class="chart" id="chart"></div>
+        <div class="x-labels" id="x-labels"></div>
+      </div>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="padding:0;overflow:hidden;">
+    <div style="padding:18px 20px 0;"><h3 id="daily-table-title">Daily breakdown</h3></div>
+    <div class="daily-table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>All login attempts</th><th>Successful</th><th>Unsuccessful</th></tr></thead>
+        <tbody id="daily-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ============ DEV NOTES ============ -->
+<button class="devnotes-fab" id="devnotes-open">📋 Notes for developers</button>
+<div class="modal-overlay" id="devnotes-modal">
+  <div class="modal">
+    <h2>Notes for developers <button class="modal-close" id="devnotes-close">✕</button></h2>
+    <h4>Scope</h4>
+    <ul>
+      <li>This is a static, front-end-only prototype. All data is mocked in-memory in the &lt;script&gt; block — nothing persists on reload.</li>
+      <li>The fixed prototype "today" is 7 Oct 2026; all login dates are generated relative to it.</li>
+    </ul>
+    <h4>MySelect Users (list)</h4>
+    <ul>
+      <li>Lists customers who have logged into MySelect, with last login and successful / unsuccessful login counts.</li>
+      <li>Clicking a row opens that customer's screen.</li>
+    </ul>
+    <h4>Customer screen</h4>
+    <ul>
+      <li>Shows name, email address (with a pencil to amend it), a "Resend login email" button, last login, and successful / unsuccessful login counts.</li>
+      <li>The email edit validates format and blocks an address already used by another MySelect customer. Saving updates the list view too.</li>
+      <li>"Resend login email" is simulated — it shows a confirmation and records when it was last sent.</li>
+    </ul>
+    <h4>Login Analytics</h4>
+    <ul>
+      <li>Overall MySelect logins, with a selector for: Daily MySelect account logins (all attempts), Successful logins, Unsuccessful logins.</li>
+      <li>Date range selector: last 7 / 14 / 30 days.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+/* ===================================================================
+   MOCK DATA
+   =================================================================== */
+const TODAY = new Date("2026-10-07T12:00:00");
+const DAY = 86400000;
+
+// Seeded random so the prototype shows the same numbers every time it loads
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const rand = mulberry32(20261007);
+
+const CUSTOMERS = [
+  { id:"emma",     name:"Emma Wilson",     email:"emma.wilson@gmail.com",        activity:.55, failRate:.10 },
+  { id:"james",    name:"James Anderson",  email:"james.anderson@email.com",     activity:.30, failRate:.25 },
+  { id:"sarah",    name:"Sarah Thompson",  email:"sarah.thompson@hotmail.com",   activity:.45, failRate:.05 },
+  { id:"michael",  name:"Michael Brown",   email:"michael.brown@yahoo.com",      activity:.20, failRate:.45 },
+  { id:"daniel",   name:"Daniel Martinez", email:"daniel.martinez@outlook.com",  activity:.35, failRate:.10 },
+  { id:"olivia",   name:"Olivia Taylor",   email:"olivia.taylor@gmail.com",      activity:.50, failRate:.15 },
+  { id:"william",  name:"William Davis",   email:"william.davis@yahoo.com",      activity:.12, failRate:.55 },
+  { id:"sophia",   name:"Sophia Johnson",  email:"sophia.johnson@hotmail.com",   activity:.40, failRate:.08 },
+  { id:"liam",     name:"Liam Clark",      email:"liam.clark@gmail.com",         activity:.25, failRate:.20 },
+  { id:"ava",      name:"Ava White",       email:"ava.white@outlook.com",        activity:.60, failRate:.05 },
+  { id:"noah",     name:"Noah Harris",     email:"noah.harris@gmail.com",        activity:.15, failRate:.35 },
+  { id:"mia",      name:"Mia Robinson",    email:"mia.robinson@hotmail.com",     activity:.65, failRate:.12 },
+  { id:"ethan",    name:"Ethan Walker",    email:"ethan.walker@yahoo.com",       activity:.18, failRate:.30 },
+  { id:"isabella", name:"Isabella Lewis",  email:"isabella.lewis@gmail.com",     activity:.28, failRate:.18 },
+  { id:"jacob",    name:"Jacob Hall",      email:"jacob.hall@outlook.com",       activity:.10, failRate:.60 }
+];
+
+// Generate login attempts over the last 45 days. Each "session" may include
+// failed attempts (e.g. wrong password) before a success, or end without one.
+const HISTORY_DAYS = 45;
+CUSTOMERS.forEach(c => {
+  c.attempts = [];
+  c.loginEmailSentAt = null;
+  for(let day = HISTORY_DAYS; day >= 0; day--){
+    if(rand() > c.activity) continue;
+    const base = new Date(TODAY.getTime() - day*DAY);
+    base.setHours(7 + Math.floor(rand()*15), Math.floor(rand()*60), 0, 0);
+    if(base > TODAY) continue;
+    let t = base.getTime();
+    let fails = 0;
+    while(rand() < c.failRate && fails < 3){ c.attempts.push({ at:new Date(t), success:false }); t += 40000 + rand()*60000; fails++; }
+    if(fails < 3 || rand() < .5) c.attempts.push({ at:new Date(t), success:true });
+  }
+  // Everyone in this list has logged in at least once
+  if(!c.attempts.some(a => a.success)){
+    const at = new Date(TODAY.getTime() - (2 + Math.floor(rand()*20))*DAY); at.setHours(10, 15, 0, 0);
+    c.attempts.push({ at, success:true });
+  }
+  c.attempts.sort((a,b) => b.at - a.at);
+});
+
+/* ===================================================================
+   HELPERS
+   =================================================================== */
+const appState = { screen:"users", search:"", date:"all", sort:"last", currentId:null, editingEmail:false, metric:"all", range:30 };
+
+function initials(name){ return name.split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase(); }
+function fmtDateTime(dt){
+  return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) + ', ' +
+         dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtDay(dt){ return dt.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'}); }
+function timeAgo(dt){
+  const mins = Math.round((TODAY - dt)/60000);
+  if(mins < 60) return mins + " minutes ago";
+  const hrs = Math.round(mins/60);
+  if(hrs < 24) return hrs + " hour" + (hrs!==1?"s":"") + " ago";
+  const days = Math.round(hrs/24);
+  return days + " day" + (days!==1?"s":"") + " ago";
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+function stats(c){
+  const ok = c.attempts.filter(a=>a.success);
+  const fail = c.attempts.filter(a=>!a.success);
+  return { ok: ok.length, fail: fail.length, lastLogin: ok[0] ? ok[0].at : null, lastAttempt: c.attempts[0] };
+}
+function getCustomer(id){ return CUSTOMERS.find(c => c.id === id); }
+function numPill(n, kind){ return `<span class="num-pill ${n===0?'zero':kind}">${n}</span>`; }
+
+let toastTimer;
+function toast(msg){
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
+}
+
+/* ===================================================================
+   RENDER: USER LIST
+   =================================================================== */
+function renderList(){
+  document.getElementById("count-users").textContent = CUSTOMERS.length;
+  const s = appState.search.toLowerCase();
+  let list = CUSTOMERS.map(c => ({ c, st: stats(c) })).filter(({c, st}) => {
+    if(s && !c.name.toLowerCase().includes(s) && !c.email.toLowerCase().includes(s)) return false;
+    if(appState.date !== "all" && (TODAY - st.lastLogin)/DAY > Number(appState.date)) return false;
+    return true;
+  });
+  const sorters = {
+    last: (a,b) => b.st.lastLogin - a.st.lastLogin,
+    name: (a,b) => a.c.name.localeCompare(b.c.name),
+    ok:   (a,b) => b.st.ok - a.st.ok,
+    fail: (a,b) => b.st.fail - a.st.fail
+  };
+  list.sort(sorters[appState.sort]);
+
+  document.getElementById("results-meta").textContent = `Showing ${list.length} customer${list.length!==1?'s':''}`;
+  const container = document.getElementById("list-container");
+  if(!list.length){
+    container.innerHTML = `<div class="empty-state"><h3>No customers match these filters</h3><p>Try widening the last login range or clearing the search.</p></div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div class="flat-table">
+      <table>
+        <thead><tr><th>Customer</th><th>Last login</th><th>Successful logins</th><th>Unsuccessful logins</th><th></th></tr></thead>
+        <tbody>
+          ${list.map(({c, st}) => `
+            <tr class="user-row" onclick="openCustomer('${c.id}')">
+              <td><div class="user-cell"><div class="avatar">${initials(c.name)}</div><div><div class="user-name">${escapeHtml(c.name)}</div><div class="user-sub">${escapeHtml(c.email)}</div></div></div></td>
+              <td><div>${fmtDateTime(st.lastLogin)}</div><div class="user-sub">${timeAgo(st.lastLogin)}</div></td>
+              <td>${numPill(st.ok,'ok')}</td>
+              <td>${numPill(st.fail,'fail')}</td>
+              <td style="text-align:right;"><span class="link-btn">View →</span></td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+/* ===================================================================
+   RENDER: CUSTOMER SCREEN
+   =================================================================== */
+function openCustomer(id){
+  appState.currentId = id;
+  appState.editingEmail = false;
+  showScreen("customer");
+  renderCustomer();
+  window.scrollTo(0,0);
+}
+
+function renderCustomer(){
+  const c = getCustomer(appState.currentId);
+  const st = stats(c);
+  document.getElementById("bc-name").textContent = c.name;
+  document.getElementById("c-avatar").textContent = initials(c.name);
+  document.getElementById("c-title").textContent = c.name;
+  document.getElementById("c-name").textContent = c.name;
+  renderEmailRow();
+
+  document.getElementById("c-last-login").textContent = fmtDateTime(st.lastLogin);
+  document.getElementById("c-last-login-ago").textContent = "Last successful login · " + timeAgo(st.lastLogin);
+  const la = st.lastAttempt;
+  document.getElementById("c-last-attempt").innerHTML = `${fmtDateTime(la.at)} <span class="result-tag ${la.success?'ok':'fail'}">${la.success?'Successful':'Unsuccessful'}</span>`;
+
+  document.getElementById("c-ok").textContent = st.ok;
+  document.getElementById("c-fail").textContent = st.fail;
+
+  document.getElementById("c-sent-note").textContent = c.loginEmailSentAt ? "Login email last sent " + fmtDateTime(c.loginEmailSentAt) : "";
+
+  document.getElementById("c-history").innerHTML = c.attempts.slice(0, 12).map(a => `
+    <tr><td>${fmtDateTime(a.at)}</td><td><span class="result-tag ${a.success?'ok':'fail'}">${a.success?'Successful':'Unsuccessful'}</span></td></tr>`).join("");
+}
+
+function renderEmailRow(){
+  const c = getCustomer(appState.currentId);
+  const row = document.getElementById("email-row");
+  const err = document.getElementById("email-error");
+  err.classList.add("hidden");
+  if(!appState.editingEmail){
+    row.innerHTML = `<span class="k">Email address</span><span class="v"><span id="c-email">${escapeHtml(c.email)}</span><button class="pencil" title="Amend email address" onclick="startEditEmail()">✏️</button></span>`;
+  } else {
+    row.innerHTML = `<span class="k">Email address</span>
+      <span class="email-edit">
+        <input type="email" id="email-input" value="${escapeHtml(c.email)}" onkeydown="if(event.key==='Enter')saveEmail();if(event.key==='Escape')cancelEditEmail();">
+        <button class="btn-gold btn-sm" onclick="saveEmail()">Save</button>
+        <button class="btn-outline btn-sm" onclick="cancelEditEmail()">Cancel</button>
+      </span>`;
+    const input = document.getElementById("email-input");
+    input.focus(); input.select();
+  }
+}
+function startEditEmail(){ appState.editingEmail = true; renderEmailRow(); }
+function cancelEditEmail(){ appState.editingEmail = false; renderEmailRow(); }
+function saveEmail(){
+  const c = getCustomer(appState.currentId);
+  const val = document.getElementById("email-input").value.trim();
+  const err = document.getElementById("email-error");
+  const showErr = msg => { err.textContent = msg; err.classList.remove("hidden"); };
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return showErr("Enter a valid email address.");
+  if(val.toLowerCase() === c.email.toLowerCase()){ cancelEditEmail(); return; }
+  if(CUSTOMERS.some(o => o.id !== c.id && o.email.toLowerCase() === val.toLowerCase())) return showErr("This email address is already used by another MySelect customer.");
+  c.email = val;
+  appState.editingEmail = false;
+  renderEmailRow();
+  toast("Email address updated to " + val);
+}
+
+function resendLoginEmail(){
+  const c = getCustomer(appState.currentId);
+  const btn = document.getElementById("resend-btn");
+  btn.disabled = true; btn.textContent = "Sending…";
+  setTimeout(() => {
+    c.loginEmailSentAt = new Date(TODAY); // prototype "now"
+    btn.disabled = false; btn.textContent = "✉️ Resend login email";
+    renderCustomer();
+    toast("Login email sent to " + c.email);
+  }, 700);
+}
+
+/* ===================================================================
+   RENDER: ANALYTICS
+   =================================================================== */
+function dailySeries(days){
+  const out = [];
+  for(let i = days-1; i >= 0; i--){
+    const start = new Date(TODAY); start.setHours(0,0,0,0); start.setTime(start.getTime() - i*DAY);
+    const end = new Date(start.getTime() + DAY);
+    let ok = 0, fail = 0;
+    CUSTOMERS.forEach(c => c.attempts.forEach(a => { if(a.at >= start && a.at < end){ a.success ? ok++ : fail++; } }));
+    out.push({ date:start, ok, fail, all: ok+fail });
+  }
+  return out;
+}
+
+const METRICS = {
+  all:  { label:"Daily MySelect account logins", short:"login attempts", color:"var(--gold)" },
+  ok:   { label:"Successful logins",             short:"successful logins", color:"var(--green)" },
+  fail: { label:"Unsuccessful logins",           short:"unsuccessful logins", color:"var(--red)" }
+};
+
+function renderAnalytics(){
+  const series = dailySeries(appState.range);
+  const totOk = series.reduce((s,d)=>s+d.ok,0);
+  const totFail = series.reduce((s,d)=>s+d.fail,0);
+  const totAll = totOk + totFail;
+  const rangeStart = series[0].date;
+  const uniq = CUSTOMERS.filter(c => c.attempts.some(a => a.success && a.at >= rangeStart)).length;
+  const rate = totAll ? Math.round(totOk/totAll*100) : 0;
+  const rangeLbl = `Last ${appState.range} days`;
+
+  document.getElementById("stat-grid").innerHTML = `
+    <div class="stat-card"><div class="label">All login attempts</div><div class="value">${totAll}</div><div class="sub">${rangeLbl}</div></div>
+    <div class="stat-card accent-green"><div class="label">Successful logins</div><div class="value">${totOk}</div><div class="sub">${rangeLbl}</div></div>
+    <div class="stat-card accent-red"><div class="label">Unsuccessful logins</div><div class="value">${totFail}</div><div class="sub">${rangeLbl}</div></div>
+    <div class="stat-card"><div class="label">Success rate</div><div class="value">${rate}%</div><div class="sub">Successful ÷ all attempts</div></div>
+    <div class="stat-card accent-blue"><div class="label">Customers logged in</div><div class="value">${uniq}</div><div class="sub">At least one successful login</div></div>`;
+
+  const m = METRICS[appState.metric];
+  const vals = series.map(d => d[appState.metric]);
+  const rawMax = Math.max(...vals, 1);
+  const step = Math.max(1, Math.ceil(rawMax/4));
+  const max = step*4;
+
+  const chart = document.getElementById("chart");
+  let grid = "";
+  for(let g = 0; g <= 4; g++){
+    const v = step*g;
+    grid += `<div class="gridline" style="bottom:${(v/max)*100}%;"><span>${v}</span></div>`;
+  }
+  chart.innerHTML = grid + series.map((d,i) => `
+    <div class="bar-col" data-i="${i}">
+      <div class="bar" style="height:${(d[appState.metric]/max)*100}%;background:${m.color};"></div>
+    </div>`).join("");
+
+  const labelEvery = appState.range <= 7 ? 1 : appState.range <= 14 ? 2 : 5;
+  document.getElementById("x-labels").innerHTML = series.map((d,i) =>
+    `<div>${(i % labelEvery === 0 || i === series.length-1) ? d.date.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : ''}</div>`).join("");
+
+  const tip = document.getElementById("tooltip");
+  chart.querySelectorAll(".bar-col").forEach(col => {
+    col.addEventListener("mouseenter", () => {
+      const d = series[Number(col.dataset.i)];
+      tip.innerHTML = `${fmtDay(d.date)}<br><b>${d[appState.metric]}</b> ${m.short}`;
+      const wrap = document.querySelector(".chart-wrap").getBoundingClientRect();
+      const r = col.getBoundingClientRect();
+      const bar = col.querySelector(".bar").getBoundingClientRect();
+      tip.style.left = (r.left - wrap.left + r.width/2) + "px";
+      tip.style.top = (bar.top - wrap.top) + "px";
+      tip.style.display = "block";
+    });
+    col.addEventListener("mouseleave", () => tip.style.display = "none");
+  });
+
+  document.getElementById("daily-table-title").textContent = "Daily breakdown — " + rangeLbl.toLowerCase();
+  document.getElementById("daily-table").innerHTML = series.slice().reverse().map(d => `
+    <tr><td>${fmtDay(d.date)}</td><td><strong>${d.all}</strong></td><td>${numPill(d.ok,'ok')}</td><td>${numPill(d.fail,'fail')}</td></tr>`).join("");
+}
+
+/* ===================================================================
+   NAV / WIRING
+   =================================================================== */
+function showScreen(name){
+  appState.screen = name;
+  ["list","customer","analytics"].forEach(s => document.getElementById("screen-"+s).classList.add("hidden"));
+  const map = { users:"list", customer:"customer", analytics:"analytics" };
+  document.getElementById("screen-"+map[name]).classList.remove("hidden");
+  const tab = name === "analytics" ? "analytics" : "users";
+  document.querySelectorAll(".subnav button").forEach(b => b.classList.toggle("active", b.dataset.subnav === tab));
+}
+
+document.querySelectorAll(".subnav button").forEach(btn => btn.addEventListener("click", () => {
+  if(btn.dataset.subnav === "analytics"){ showScreen("analytics"); renderAnalytics(); }
+  else { showScreen("users"); renderList(); }
+}));
+document.getElementById("back-to-list").addEventListener("click", e => { e.preventDefault(); showScreen("users"); renderList(); });
+document.getElementById("f-search").addEventListener("input", e => { appState.search = e.target.value; renderList(); });
+document.getElementById("f-date").addEventListener("change", e => { appState.date = e.target.value; renderList(); });
+document.getElementById("f-sort").addEventListener("change", e => { appState.sort = e.target.value; renderList(); });
+document.getElementById("resend-btn").addEventListener("click", resendLoginEmail);
+document.querySelectorAll("#metric-toggle button").forEach(btn => btn.addEventListener("click", () => {
+  appState.metric = btn.dataset.metric;
+  document.querySelectorAll("#metric-toggle button").forEach(b => b.classList.toggle("active", b === btn));
+  renderAnalytics();
+}));
+document.getElementById("range-select").addEventListener("change", e => { appState.range = Number(e.target.value); renderAnalytics(); });
+
+document.getElementById("devnotes-open").addEventListener("click", () => document.getElementById("devnotes-modal").classList.add("show"));
+document.getElementById("devnotes-close").addEventListener("click", () => document.getElementById("devnotes-modal").classList.remove("show"));
+document.getElementById("devnotes-modal").addEventListener("click", e => { if(e.target.id === "devnotes-modal") e.currentTarget.classList.remove("show"); });
+
+/* ===================================================================
+   INIT
+   =================================================================== */
+renderList();
+</script>
+</body>
+</html>
